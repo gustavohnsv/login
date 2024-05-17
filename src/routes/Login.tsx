@@ -1,48 +1,65 @@
 import { api } from '../services/api';
-import { useRef, FormEvent } from 'react';
+import { Outlet, Link, useNavigate } from "react-router-dom";
+import { useRef, FormEvent, useEffect } from 'react';
 import { RiLockPasswordFill, RiUser6Fill  } from "react-icons/ri";
 
 export default function Login() {
+
+  const navigate = useNavigate();
 
   const emailRef = useRef<HTMLInputElement | null>(null);
   const passwordRef = useRef<HTMLInputElement | null>(null);
   const rememberMeRef = useRef<HTMLInputElement | null>(null);
 
-  async function getLogin(id: string, token: string) {
+  useEffect(() => { // Verifica se o usuário já está logado, se estiver, redireciona para a página de perfil
+    const token = localStorage.getItem('token');
+    const id = localStorage.getItem('id');
+    if (token && id) {
+      getLogin(id, token, navigate);
+    }
+  }, []);
+
+  async function getLogin(id: string, token: string, navigate: any) {
     try {
       const response = await api.get(`/login?id=${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-      console.log(response.data);
+      const userData = response.data;
+      console.log(userData);
+      navigate('/profile', { state: { userID: id } });
     } catch (error) {
-      alert('Erro ao fazer login');
+      alert((error as any).response.data.message);
     }
   }
 
   async function handleLogin(event: FormEvent) {
     event.preventDefault();
+    if (!emailRef.current || !passwordRef.current) {
+      alert('Preencha todos os campos');
+      return;
+    }
     try {
-      if (!emailRef.current || !passwordRef.current) {
-        alert('Preencha todos os campos');
-        return;
-      }
       const response = await api.post('/login', {
         email: emailRef.current?.value,
         password: passwordRef.current?.value
       });
-      console.log(response.data);
-      const token = response.data.data.token;
-      const id = response.data.data.id;
+      const fetchData = response.data;
+      const token = fetchData.data.token;
+      const id = fetchData.data.id;
+      localStorage.clear();
+      sessionStorage.clear();
       if (rememberMeRef.current?.checked) {
-        sessionStorage.setItem('token', token);
+        localStorage.setItem('token', token);
+        localStorage.setItem('id', id);
       } else {
-        sessionStorage.removeItem('token');
+        sessionStorage.setItem('token', token);
+        sessionStorage.setItem('id', id);
       }
-      getLogin(id, token);
+      getLogin(id, token, navigate);
     } catch (error) {
-      alert('Verifique se todos os dados foram preenchidos corretamente');
+      alert((error as any).response.data.message);
     }
   }
   
@@ -85,6 +102,13 @@ export default function Login() {
           type='submit' 
           value='Login'
           />
+          <Outlet />
+          <label> 
+            Ainda nao possui uma conta?
+            <Link className='text-blue-500 ml-1' to={'signup'}> 
+            Registre-se! 
+            </Link>
+          </label>
         </form>
       </main>
     </div>
