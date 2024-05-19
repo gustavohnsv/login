@@ -52,10 +52,8 @@ export default function Login() {
       sessionStorage.clear();
       if (rememberMeRef.current?.checked) {
         localStorage.setItem('token', token);
-        localStorage.setItem('id', id);
       } else {
         sessionStorage.setItem('token', token);
-        sessionStorage.setItem('id', id);
       }
       getLogin(id, token, navigate);
     } catch (error) {
