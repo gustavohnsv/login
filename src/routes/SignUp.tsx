@@ -23,9 +23,10 @@ export default function SignUp() {
         }
         try {
             const response = await api.post('/user', {
-                name: nameRef.current?.value,
                 email: emailRef.current?.value,
-                password: passwordRef.current?.value
+                password: passwordRef.current?.value,
+                name: nameRef.current?.value,
+                photoID: Math.floor(Math.random() * 11)
             });
             console.log(response.data);
             nameRef.current.value = '';
